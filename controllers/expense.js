@@ -32,7 +32,7 @@ exports.addExpense = async (req, res) => {
     res.status(500).json({ message: "Server Err" });
   }
 
-  console.log(income);
+  // console.log(income);
 };
 
 exports.getExpenses = async (req, res) => {

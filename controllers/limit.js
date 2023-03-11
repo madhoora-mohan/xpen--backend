@@ -14,7 +14,7 @@ exports.getLimit = async (req, res) => {
 exports.updateLimit = async (req, res) => {
   const { email, uplimit } = req.params;
   // console.log(req);
-  console.log(req.params);
+  // console.log(req.params);
   try {
     const income = await User.updateOne(
       { email },
