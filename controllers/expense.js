@@ -1,9 +1,4 @@
-// const {
-//   useGlobalContext,
-// } = require("../../frontend/src/context/globalContext");
 const ExpenseSchema = require("../models/ExpenseModel");
-// const { use } = require("../routes/transactions");
-// const emailid = localStorage.getItem("email");
 exports.addExpense = async (req, res) => {
   const { email, title, amount, category, description, date } = req.body;
 
@@ -57,18 +52,3 @@ exports.deleteExpense = async (req, res) => {
       res.status(500).json({ message: "Server Error" });
     });
 };
-
-// exports.getExpensesWCategory = async (req, res) => {
-//   try {
-//     const { email } = req.params;
-//     const incomes = await ExpenseSchema.find({
-//       email: email,
-//       category: category,
-//     }).sort({
-//       date: -1,
-//     });
-//     res.status(200).json(incomes);
-//   } catch (error) {
-//     res.status(500).json({ message: "Server Error" });
-//   }
-// };

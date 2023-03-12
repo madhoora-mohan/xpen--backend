@@ -4,6 +4,8 @@
 .pnp.js
 .env
 
+#dockerfiles
+Dockerfile
 
 # testing
 /coverage
