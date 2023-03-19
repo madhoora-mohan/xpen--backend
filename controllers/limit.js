@@ -6,7 +6,7 @@ exports.getLimit = async (req, res) => {
     const income = await User.find({ email: email });
     res.status(200).json(income);
   } catch (error) {
-    res.status(500).json({ message: "Error vro" });
+    res.status(500).json({ message: "Internal Server Error" });
     console.log({ error });
   }
 };
@@ -23,7 +23,7 @@ exports.updateLimit = async (req, res) => {
     );
     res.status(200).json(income);
   } catch (error) {
-    res.status(500).json({ message: "Idhu semma error machi" });
+    res.status(500).json({ message: "Internal Server Error" });
     console.log(error);
   }
 };
