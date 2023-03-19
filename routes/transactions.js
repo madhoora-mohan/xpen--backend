@@ -3,7 +3,6 @@ const {
   addExpense,
   getExpenses,
   deleteExpense,
-  getExpensesWCategory
 } = require("../controllers/expense");
 const {
   addIncome,
