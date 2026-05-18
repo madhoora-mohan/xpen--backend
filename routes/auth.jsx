@@ -33,6 +33,7 @@ router.post("/", async (req, res) => {
     if (!validPassword) {
       console.log(`[AUTH] Login failed - wrong password for email: ${email}`);
       return res.status(401).send({ message: "Invalid Email or Password" });
+    }
 
     const token = user.generateAuthToken();
     res
