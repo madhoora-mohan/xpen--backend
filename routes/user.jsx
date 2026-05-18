@@ -2,6 +2,13 @@ const { User, validate } = require("../models/User.jsx");
 const router = require("express").Router();
 const bcrypt = require("bcrypt");
 
+const COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: true,
+  sameSite: "none",
+  maxAge: 2 * 24 * 60 * 60 * 1000,
+};
+
 router.post("/", async (req, res) => {
   const { email } = req.body;
   console.log(`[USER] Registration attempt - email: ${email}`);
@@ -21,9 +28,19 @@ router.post("/", async (req, res) => {
     const salt = await bcrypt.genSalt(Number(process.env.SALT_ROUNDS));
     const hashPassword = await bcrypt.hash(req.body.password, salt);
 
-    await new User({ ...req.body, password: hashPassword }).save();
-    console.log(`[USER] Registration successful - email: ${email}`);
-    res.status(201).send({ message: "User created successfully" });
+    const newUser = await new User({
+      ...req.body,
+      password: hashPassword,
+    }).save();
+    const token = newUser.generateAuthToken();
+    res
+      .cookie("token", token, COOKIE_OPTIONS)
+      .status(201)
+      .send({
+        email: newUser.email,
+        username: newUser.username,
+        message: "User created successfully",
+      });
   } catch (error) {
     console.error(`[USER] Internal error - email: ${email}`, error);
     res.status(500).send({ message: "Server error" });

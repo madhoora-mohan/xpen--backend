@@ -1,6 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+const cookieParser = require("cookie-parser");
 const { db } = require("./db/db");
 const { readdirSync } = require("fs");
 const userRoutes = require("./routes/user.jsx");
@@ -10,9 +11,23 @@ const app = express();
 
 const PORT = process.env.PORT;
 
+const ALLOWED_ORIGINS = [
+  "http://localhost:3000",
+  "https://xpenz.vercel.app",
+];
+
 //middlewares
 app.use(express.json());
-app.use(cors());
+app.use(cookieParser());
+app.use(
+  cors({
+    origin: (origin, cb) => {
+      if (!origin || ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
+      cb(null, false);
+    },
+    credentials: true,
+  })
+);
 
 //routes
 app.use("/api/users", userRoutes);

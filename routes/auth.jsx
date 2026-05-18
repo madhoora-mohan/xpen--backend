@@ -3,6 +3,13 @@ const { User } = require("../models/User.jsx");
 const bcrypt = require("bcrypt");
 const Joi = require("joi");
 
+const COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: true,
+  sameSite: "none",
+  maxAge: 2 * 24 * 60 * 60 * 1000,
+};
+
 router.post("/", async (req, res) => {
   const { email } = req.body;
   console.log(`[AUTH] Login attempt - email: ${email}`);
@@ -26,19 +33,31 @@ router.post("/", async (req, res) => {
     if (!validPassword) {
       console.log(`[AUTH] Login failed - wrong password for email: ${email}`);
       return res.status(401).send({ message: "Invalid Email or Password" });
-    }
+
     const token = user.generateAuthToken();
-    console.log(`[AUTH] Login successful - email: ${email}`);
-    res.status(200).send({
-      email: user.email,
-      username: user.username,
-      data: token,
-      message: "logged in successfully",
-    });
+    res
+      .cookie("token", token, COOKIE_OPTIONS)
+      .status(200)
+      .send({
+        email: user.email,
+        username: user.username,
+        message: "logged in successfully",
+      });
   } catch (error) {
     console.error(`[AUTH] Internal error - email: ${email}`, error);
     res.status(500).send({ message: "Internal Server Error" });
   }
+});
+
+router.post("/logout", (req, res) => {
+  res
+    .clearCookie("token", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+    })
+    .status(200)
+    .send({ message: "logged out" });
 });
 
 const validate = (data) => {
