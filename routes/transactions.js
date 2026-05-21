@@ -14,19 +14,20 @@ const {
   deleteTransfer,
 } = require("../controllers/transfer");
 const { getLimit, updateLimit } = require("../controllers/limit");
+const auth = require("../middleware/auth");
 const router = require("express").Router();
 
 router
-  .post("/add-income/:email", addIncome)
-  .get("/get-incomes/:email", getIncomes)
-  .delete("/delete-income/:id", deleteIncome)
-  .post("/add-expense/:email", addExpense)
-  .get("/get-expenses/:email", getExpenses)
-  .delete("/delete-expense/:id", deleteExpense)
-  .post("/add-transfer/:email", addTransfer)
-  .get("/get-transfers/:email", getTransfers)
-  .delete("/delete-transfer/:id", deleteTransfer)
-  .get("/get-limit/:email", getLimit)
-  .put("/update-limit/:email/:uplimit", updateLimit);
+  .post("/add-income/:email", auth, addIncome)
+  .get("/get-incomes/:email", auth, getIncomes)
+  .delete("/delete-income/:id", auth, deleteIncome)
+  .post("/add-expense/:email", auth, addExpense)
+  .get("/get-expenses/:email", auth, getExpenses)
+  .delete("/delete-expense/:id", auth, deleteExpense)
+  .post("/add-transfer/:email", auth, addTransfer)
+  .get("/get-transfers/:email", auth, getTransfers)
+  .delete("/delete-transfer/:id", auth, deleteTransfer)
+  .get("/get-limit/:email", auth, getLimit)
+  .put("/update-limit", auth, updateLimit);
 
 module.exports = router;

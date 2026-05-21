@@ -1,6 +1,7 @@
 const ExpenseSchema = require("../models/ExpenseModel");
 exports.addExpense = async (req, res) => {
-  const { email, title, amount, category, description, date } = req.body;
+  const email = req.user.email;
+  const { title, amount, category, description, date } = req.body;
   console.log(`[EXPENSE] Add expense request - email: ${email}, title: ${title}, amount: ${amount}, category: ${category}`);
 
   const income = ExpenseSchema({
@@ -33,7 +34,7 @@ exports.addExpense = async (req, res) => {
 };
 
 exports.getExpenses = async (req, res) => {
-  const { email } = req.params;
+  const email = req.user.email;
   console.log(`[EXPENSE] Get expenses request - email: ${email}`);
   try {
     const incomes = await ExpenseSchema.find({ email }).sort({ date: 1 });

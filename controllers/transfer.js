@@ -1,8 +1,8 @@
 const TransferSchema = require("../models/TransferModel");
 
 exports.addTransfer = async (req, res) => {
-  const { email, title, amount, category, description, date, direction } =
-    req.body;
+  const email = req.user.email;
+  const { title, amount, category, description, date, direction } = req.body;
   console.log(`[TRANSFER] Add transfer request - email: ${email}, title: ${title}, amount: ${amount}, category: ${category}, direction: ${direction}`);
 
   const transfer = TransferSchema({
@@ -42,7 +42,7 @@ exports.addTransfer = async (req, res) => {
 };
 
 exports.getTransfers = async (req, res) => {
-  const { email } = req.params;
+  const email = req.user.email;
   console.log(`[TRANSFER] Get transfers request - email: ${email}`);
   try {
     const transfers = await TransferSchema.find({ email }).sort({ date: 1 });

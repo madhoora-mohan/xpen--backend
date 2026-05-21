@@ -1,7 +1,7 @@
 const { User, validate } = require("../models/User.jsx");
 
 exports.getLimit = async (req, res) => {
-  const { email } = req.params;
+  const email = req.user.email;
   console.log(`[LIMIT] Get limit request - email: ${email}`);
   try {
     const user = await User.find({ email });
@@ -14,7 +14,8 @@ exports.getLimit = async (req, res) => {
 };
 
 exports.updateLimit = async (req, res) => {
-  const { email, uplimit } = req.params;
+  const email = req.user.email;
+  const { uplimit } = req.body;
   console.log(`[LIMIT] Update limit request - email: ${email}, new limit: ${uplimit}`);
   try {
     const result = await User.updateOne(
