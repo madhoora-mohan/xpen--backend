@@ -1,4 +1,4 @@
-const { User, validate } = require("../models/User.jsx");
+const { User, validate } = require("../models/User");
 const router = require("express").Router();
 const bcrypt = require("bcrypt");
 
@@ -10,18 +10,14 @@ const COOKIE_OPTIONS = {
 };
 
 router.post("/", async (req, res) => {
-  const { email } = req.body;
-  console.log(`[USER] Registration attempt - email: ${email}`);
   try {
     const { error } = validate(req.body);
     if (error) {
-      console.log(`[USER] Validation failed - email: ${email}, reason: ${error.details[0].message}`);
       return res.status(400).send({ message: error.details[0].message });
     }
 
-    const user = await User.findOne({ email });
-    if (user) {
-      console.log(`[USER] Registration failed - email already in use: ${email}`);
+    const existing = await User.findOne({ email: req.body.email });
+    if (existing) {
       return res.status(409).send({ message: "Email already in use" });
     }
 
@@ -42,7 +38,7 @@ router.post("/", async (req, res) => {
         message: "User created successfully",
       });
   } catch (error) {
-    console.error(`[USER] Internal error - email: ${email}`, error);
+    console.error("registration failed:", error.message);
     res.status(500).send({ message: "Server error" });
   }
 });

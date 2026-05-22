@@ -15,8 +15,6 @@ const IncomeSchema = new mongoose.Schema(
     amount: {
       type: Number,
       required: true,
-      maxLength: 20,
-      trim: true,
     },
     type: {
       type: String,
@@ -25,7 +23,6 @@ const IncomeSchema = new mongoose.Schema(
     date: {
       type: Date,
       required: true,
-      trim: true,
     },
     category: {
       type: String,
@@ -34,7 +31,7 @@ const IncomeSchema = new mongoose.Schema(
     },
     description: {
       type: String,
-      maxLength: 20,
+      maxLength: 200,
       trim: true,
     },
   },

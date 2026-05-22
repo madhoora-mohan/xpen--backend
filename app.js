@@ -2,10 +2,12 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
+const rateLimit = require("express-rate-limit");
+const mongoSanitize = require("express-mongo-sanitize");
 const { db } = require("./db/db");
-const { readdirSync } = require("fs");
-const userRoutes = require("./routes/user.jsx");
-const authRoutes = require("./routes/auth.jsx");
+const userRoutes = require("./routes/user");
+const authRoutes = require("./routes/auth");
+const transactionRoutes = require("./routes/transactions");
 
 const app = express();
 
@@ -23,6 +25,7 @@ const ALLOWED_ORIGIN_PATTERNS = [
 //middlewares
 app.use(express.json());
 app.use(cookieParser());
+app.use(mongoSanitize());
 app.use(
   cors({
     origin: (origin, cb) => {
@@ -34,12 +37,18 @@ app.use(
   })
 );
 
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 35,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Too many requests, please try again later." },
+});
+
 //routes
-app.use("/api/users", userRoutes);
-app.use("/api/auth", authRoutes);
-readdirSync("./routes").map((route) =>
-  app.use("/api/v1", require("./routes/" + route))
-);
+app.use("/api/users", authLimiter, userRoutes);
+app.use("/api/auth", authLimiter, authRoutes);
+app.use("/api/v1", transactionRoutes);
 
 const server = () => {
   db();
