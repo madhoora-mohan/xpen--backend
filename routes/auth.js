@@ -3,10 +3,11 @@ const { User } = require("../models/User");
 const bcrypt = require("bcrypt");
 const Joi = require("joi");
 
+const isProd = process.env.NODE_ENV === "production";
 const COOKIE_OPTIONS = {
   httpOnly: true,
-  secure: true,
-  sameSite: "none",
+  secure: isProd,
+  sameSite: isProd ? "none" : "lax",
   maxAge: 2 * 24 * 60 * 60 * 1000,
 };
 
@@ -49,8 +50,8 @@ router.post("/logout", (req, res) => {
   res
     .clearCookie("token", {
       httpOnly: true,
-      secure: true,
-      sameSite: "none",
+      secure: isProd,
+      sameSite: isProd ? "none" : "lax",
     })
     .status(200)
     .send({ message: "logged out" });

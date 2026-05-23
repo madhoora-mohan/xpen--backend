@@ -11,7 +11,7 @@ const transactionRoutes = require("./routes/transactions");
 
 const app = express();
 
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 3001;
 
 const ALLOWED_ORIGINS = [
   "http://localhost:3000",
@@ -57,4 +57,8 @@ const server = () => {
   });
 };
 
-server();
+if (require.main === module) {
+  server();
+}
+
+module.exports = app;

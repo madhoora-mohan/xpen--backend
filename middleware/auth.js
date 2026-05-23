@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
+const { User } = require("../models/User");
 
-module.exports = (req, res, next) => {
+module.exports = async (req, res, next) => {
   const token = req.cookies?.token;
   if (!token) {
     return res
@@ -8,7 +9,14 @@ module.exports = (req, res, next) => {
       .send({ code: "NO_TOKEN", message: "Authentication required" });
   }
   try {
-    req.user = jwt.verify(token, process.env.JWTPRIVATEKEY);
+    const { _id } = jwt.verify(token, process.env.JWTPRIVATEKEY);
+    const user = await User.findById(_id, { email: 1 });
+    if (!user) {
+      return res
+        .status(401)
+        .send({ code: "INVALID_TOKEN", message: "Session expired" });
+    }
+    req.user = user;
     next();
   } catch (err) {
     const code =

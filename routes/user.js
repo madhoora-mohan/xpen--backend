@@ -2,10 +2,11 @@ const { User, validate } = require("../models/User");
 const router = require("express").Router();
 const bcrypt = require("bcrypt");
 
+const isProd = process.env.NODE_ENV === "production";
 const COOKIE_OPTIONS = {
   httpOnly: true,
-  secure: true,
-  sameSite: "none",
+  secure: isProd,
+  sameSite: isProd ? "none" : "lax",
   maxAge: 2 * 24 * 60 * 60 * 1000,
 };
 
