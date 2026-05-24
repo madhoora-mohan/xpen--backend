@@ -20,6 +20,9 @@ const ALLOWED_ORIGINS = [
 
 const ALLOWED_ORIGIN_PATTERNS = [
   /^https:\/\/xpen-frontend-.*\.vercel\.app$/,
+  // local network access during development (any LAN IP on port 3000)
+  /^http:\/\/192\.168\.\d+\.\d+:3000$/,
+  /^http:\/\/10\.\d+\.\d+\.\d+:3000$/,
 ];
 
 //middlewares

@@ -1,4 +1,5 @@
 const ExpenseSchema = require("../models/ExpenseModel");
+const { emit } = require("../middleware/sseManager");
 
 exports.addExpense = async (req, res) => {
   const email = req.user.email;
@@ -23,6 +24,7 @@ exports.addExpense = async (req, res) => {
       description,
       date,
     }).save();
+    emit(email, "expense_changed", { action: "add" });
     res.status(200).json({ message: "Expense Added" });
   } catch (error) {
     console.error("addExpense failed:", error.message);
@@ -45,6 +47,7 @@ exports.deleteExpense = async (req, res) => {
   const { id } = req.params;
   try {
     await ExpenseSchema.findByIdAndDelete(id);
+    emit(req.user.email, "expense_changed", { action: "delete" });
     res.status(200).json({ message: "Expense Deleted" });
   } catch (error) {
     console.error("deleteExpense failed:", error.message);

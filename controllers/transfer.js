@@ -1,4 +1,5 @@
 const TransferSchema = require("../models/TransferModel");
+const { emit } = require("../middleware/sseManager");
 
 exports.addTransfer = async (req, res) => {
   const email = req.user.email;
@@ -29,6 +30,7 @@ exports.addTransfer = async (req, res) => {
       date,
       direction,
     }).save();
+    emit(email, "transfer_changed", { action: "add" });
     res.status(200).json({ message: "Transfer Added" });
   } catch (error) {
     console.error("addTransfer failed:", error.message);
@@ -51,6 +53,7 @@ exports.deleteTransfer = async (req, res) => {
   const { id } = req.params;
   try {
     await TransferSchema.findByIdAndDelete(id);
+    emit(req.user.email, "transfer_changed", { action: "delete" });
     res.status(200).json({ message: "Transfer Deleted" });
   } catch (error) {
     console.error("deleteTransfer failed:", error.message);

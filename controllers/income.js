@@ -1,4 +1,5 @@
 const IncomeSchema = require("../models/IncomeModel");
+const { emit } = require("../middleware/sseManager");
 
 exports.addIncome = async (req, res) => {
   const email = req.user.email;
@@ -23,6 +24,7 @@ exports.addIncome = async (req, res) => {
       description,
       date,
     }).save();
+    emit(email, "income_changed", { action: "add" });
     res.status(200).json({ message: "Income Added" });
   } catch (error) {
     console.error("addIncome failed:", error.message);
@@ -45,6 +47,7 @@ exports.deleteIncome = async (req, res) => {
   const { id } = req.params;
   try {
     await IncomeSchema.findByIdAndDelete(id);
+    emit(req.user.email, "income_changed", { action: "delete" });
     res.status(200).json({ message: "Income Deleted" });
   } catch (error) {
     console.error("deleteIncome failed:", error.message);

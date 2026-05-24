@@ -14,7 +14,25 @@ const {
   deleteTransfer,
 } = require("../controllers/transfer");
 const auth = require("../middleware/auth");
+const { addClient, removeClient } = require("../middleware/sseManager");
 const router = require("express").Router();
+
+router.get("/events", auth, (req, res) => {
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+  res.flushHeaders();
+
+  const email = req.user.email;
+  addClient(email, res);
+
+  const heartbeat = setInterval(() => res.write(":heartbeat\n\n"), 30000);
+
+  req.on("close", () => {
+    clearInterval(heartbeat);
+    removeClient(email, res);
+  });
+});
 
 router
   .post("/add-income", auth, addIncome)
