@@ -45,9 +45,11 @@ exports.getIncomes = async (req, res) => {
 
 exports.deleteIncome = async (req, res) => {
   const { id } = req.params;
+  const email = req.user.email;
   try {
-    await IncomeSchema.findByIdAndDelete(id);
-    emit(req.user.email, "income_changed", { action: "delete" });
+    const doc = await IncomeSchema.findOneAndDelete({ _id: id, email });
+    if (!doc) return res.status(404).json({ message: "Income not found." });
+    emit(email, "income_changed", { action: "delete" });
     res.status(200).json({ message: "Income Deleted" });
   } catch (error) {
     console.error("deleteIncome failed:", error.message);

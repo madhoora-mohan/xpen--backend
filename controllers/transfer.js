@@ -48,9 +48,11 @@ exports.getTransfers = async (req, res) => {
 
 exports.deleteTransfer = async (req, res) => {
   const { id } = req.params;
+  const email = req.user.email;
   try {
-    await TransferSchema.findByIdAndDelete(id);
-    emit(req.user.email, "transfer_changed", { action: "delete" });
+    const doc = await TransferSchema.findOneAndDelete({ _id: id, email });
+    if (!doc) return res.status(404).json({ message: "Transfer not found." });
+    emit(email, "transfer_changed", { action: "delete" });
     res.status(200).json({ message: "Transfer Deleted" });
   } catch (error) {
     console.error("deleteTransfer failed:", error.message);

@@ -71,6 +71,7 @@ describe("Cycles — unauthenticated", () => {
     ["GET", "/api/v1/cycles"],
     ["GET", "/api/v1/cycles/balance"],
     ["GET", "/api/v1/cycles/compare?ids=abc"],
+    ["DELETE", "/api/v1/cycles/507f1f77bcf86cd799439011"],
   ];
 
   routes.forEach(([method, route]) => {
@@ -484,5 +485,92 @@ describe("GET /cycles/compare", () => {
     const res = await agentB.get(`/api/v1/cycles/compare?ids=${aId}`);
     expect(res.status).toBe(200);
     expect(res.body).toHaveLength(0);
+  });
+});
+
+// ── DELETE /cycles/:id ───────────────────────────────────────────────────────
+
+describe("DELETE /cycles/:id", () => {
+  it("deletes the cycle and returns 200", async () => {
+    const agent = await getAgentWithCycle("del@example.com");
+    const id = (await agent.get("/api/v1/cycles")).body[0]._id;
+
+    const res = await agent.delete(`/api/v1/cycles/${id}`);
+    expect(res.status).toBe(200);
+    expect(res.body.message).toBe("Cycle deleted.");
+
+    const list = await agent.get("/api/v1/cycles");
+    expect(list.body).toHaveLength(0);
+  });
+
+  it("cascade-deletes all transactions belonging to the cycle", async () => {
+    const agent = await getAgentWithCycle("del-cascade@example.com");
+    await agent.post("/api/v1/add-income").send(income({ amount: 5000 }));
+    await agent.post("/api/v1/add-expense").send(expense({ amount: 2000 }));
+    await agent.post("/api/v1/add-transfer").send(transfer({ amount: 500 }));
+
+    const id = (await agent.get("/api/v1/cycles")).body[0]._id;
+    await agent.delete(`/api/v1/cycles/${id}`);
+
+    // After deleting, open a fresh cycle so the transaction endpoints are reachable.
+    await agent.post("/api/v1/cycles/open").send({
+      startDate: "2026-06-01T00:00:00.000Z",
+      label: "June 2026",
+    });
+    expect((await agent.get("/api/v1/get-incomes")).body).toHaveLength(0);
+    expect((await agent.get("/api/v1/get-expenses")).body).toHaveLength(0);
+    expect((await agent.get("/api/v1/get-transfers")).body).toHaveLength(0);
+  });
+
+  it("deleting the active cycle leaves the user with no active cycle", async () => {
+    const agent = await getAgentWithCycle("del-gate@example.com");
+    const id = (await agent.get("/api/v1/cycles")).body[0]._id;
+    await agent.delete(`/api/v1/cycles/${id}`);
+
+    const res = await agent.get("/api/v1/cycles/balance");
+    expect(res.status).toBe(409);
+    expect(res.body.code).toBe("NO_ACTIVE_CYCLE");
+  });
+
+  it("can also delete a closed cycle", async () => {
+    const agent = await getAgentWithCycle("del-closed@example.com", "May 2026");
+    const mayId = (await agent.get("/api/v1/cycles")).body[0]._id;
+    await agent.post("/api/v1/cycles/close").send({ endDate: "2026-05-31T00:00:00.000Z" });
+    await agent.post("/api/v1/cycles/open").send({
+      startDate: "2026-06-01T00:00:00.000Z",
+      label: "June 2026",
+    });
+
+    const res = await agent.delete(`/api/v1/cycles/${mayId}`);
+    expect(res.status).toBe(200);
+
+    const list = await agent.get("/api/v1/cycles");
+    expect(list.body).toHaveLength(1);
+    expect(list.body[0].label).toBe("June 2026");
+  });
+
+  it("returns 400 for an invalid id", async () => {
+    const agent = await getAgentWithCycle("del-badid@example.com");
+    const res = await agent.delete("/api/v1/cycles/not-an-id");
+    expect(res.status).toBe(400);
+  });
+
+  it("returns 404 for a non-existent cycle", async () => {
+    const agent = await getAgentWithCycle("del-404@example.com");
+    const res = await agent.delete("/api/v1/cycles/507f1f77bcf86cd799439011");
+    expect(res.status).toBe(404);
+  });
+
+  it("cannot delete another user's cycle", async () => {
+    const agentA = await getAgentWithCycle("del-a@example.com");
+    const aId = (await agentA.get("/api/v1/cycles")).body[0]._id;
+    const agentB = await getAgentWithCycle("del-b@example.com");
+
+    const res = await agentB.delete(`/api/v1/cycles/${aId}`);
+    expect(res.status).toBe(404);
+
+    // Original cycle is untouched.
+    const list = await agentA.get("/api/v1/cycles");
+    expect(list.body).toHaveLength(1);
   });
 });

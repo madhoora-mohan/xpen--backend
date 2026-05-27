@@ -45,9 +45,11 @@ exports.getExpenses = async (req, res) => {
 
 exports.deleteExpense = async (req, res) => {
   const { id } = req.params;
+  const email = req.user.email;
   try {
-    await ExpenseSchema.findByIdAndDelete(id);
-    emit(req.user.email, "expense_changed", { action: "delete" });
+    const doc = await ExpenseSchema.findOneAndDelete({ _id: id, email });
+    if (!doc) return res.status(404).json({ message: "Expense not found." });
+    emit(email, "expense_changed", { action: "delete" });
     res.status(200).json({ message: "Expense Deleted" });
   } catch (error) {
     console.error("deleteExpense failed:", error.message);

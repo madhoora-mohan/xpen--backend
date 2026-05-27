@@ -140,6 +140,44 @@ describe("Expense", () => {
     expect(res.body).toHaveLength(1);
     expect(res.body[0].title).toBe(validExpense.title);
   });
+
+  it("deletes an expense", async () => {
+    await agent.post("/api/v1/add-expense").send(validExpense);
+    const list = await agent.get("/api/v1/get-expenses");
+    const id = list.body[0]._id;
+    const del = await agent.delete(`/api/v1/delete-expense/${id}`);
+    expect(del.status).toBe(200);
+    const after = await agent.get("/api/v1/get-expenses");
+    expect(after.body).toHaveLength(0);
+  });
+});
+
+// ── Transfer CRUD ────────────────────────────────────────────────────────────
+
+describe("Transfer", () => {
+  let agent;
+  beforeEach(async () => {
+    agent = await getAuthAgent();
+  });
+
+  it("adds a transfer and returns it in the list", async () => {
+    await agent.post("/api/v1/add-transfer").send(validTransfer);
+    const res = await agent.get("/api/v1/get-transfers");
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveLength(1);
+    expect(res.body[0].title).toBe(validTransfer.title);
+    expect(res.body[0].direction).toBe("out");
+  });
+
+  it("deletes a transfer", async () => {
+    await agent.post("/api/v1/add-transfer").send(validTransfer);
+    const list = await agent.get("/api/v1/get-transfers");
+    const id = list.body[0]._id;
+    const del = await agent.delete(`/api/v1/delete-transfer/${id}`);
+    expect(del.status).toBe(200);
+    const after = await agent.get("/api/v1/get-transfers");
+    expect(after.body).toHaveLength(0);
+  });
 });
 
 // ── Data scoping ────────────────────────────────────────────────────────────
@@ -165,6 +203,50 @@ describe("Data scoping", () => {
     const res = await agentB.get("/api/v1/get-expenses");
     expect(res.status).toBe(200);
     expect(res.body).toHaveLength(0);
+  });
+
+  it("user A cannot see user B's transfers", async () => {
+    const agentA = await getAuthAgent("a@example.com");
+    const agentB = await getAuthAgent("b@example.com");
+
+    await agentA.post("/api/v1/add-transfer").send(validTransfer);
+
+    const res = await agentB.get("/api/v1/get-transfers");
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveLength(0);
+  });
+
+  it("user B cannot delete user A's income", async () => {
+    const agentA = await getAuthAgent("scope-del-a@example.com");
+    const agentB = await getAuthAgent("scope-del-b@example.com");
+
+    await agentA.post("/api/v1/add-income").send(validIncome);
+    const id = (await agentA.get("/api/v1/get-incomes")).body[0]._id;
+
+    expect((await agentB.delete(`/api/v1/delete-income/${id}`)).status).toBe(404);
+    expect((await agentA.get("/api/v1/get-incomes")).body).toHaveLength(1);
+  });
+
+  it("user B cannot delete user A's expense", async () => {
+    const agentA = await getAuthAgent("scope-del-exp-a@example.com");
+    const agentB = await getAuthAgent("scope-del-exp-b@example.com");
+
+    await agentA.post("/api/v1/add-expense").send(validExpense);
+    const id = (await agentA.get("/api/v1/get-expenses")).body[0]._id;
+
+    expect((await agentB.delete(`/api/v1/delete-expense/${id}`)).status).toBe(404);
+    expect((await agentA.get("/api/v1/get-expenses")).body).toHaveLength(1);
+  });
+
+  it("user B cannot delete user A's transfer", async () => {
+    const agentA = await getAuthAgent("scope-del-tfr-a@example.com");
+    const agentB = await getAuthAgent("scope-del-tfr-b@example.com");
+
+    await agentA.post("/api/v1/add-transfer").send(validTransfer);
+    const id = (await agentA.get("/api/v1/get-transfers")).body[0]._id;
+
+    expect((await agentB.delete(`/api/v1/delete-transfer/${id}`)).status).toBe(404);
+    expect((await agentA.get("/api/v1/get-transfers")).body).toHaveLength(1);
   });
 });
 
