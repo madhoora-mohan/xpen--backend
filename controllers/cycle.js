@@ -393,6 +393,34 @@ exports.exportCycles = async (req, res) => {
   }
 };
 
+// DELETE /cycles/:id — deletes a cycle and all its transactions.
+// The cycle must belong to the requesting user.
+exports.deleteCycle = async (req, res) => {
+  const email = req.user.email;
+  const { id } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(400).json({ message: "Invalid cycle id." });
+  }
+
+  try {
+    const cycle = await Cycle.findOne({ _id: id, email });
+    if (!cycle) return res.status(404).json({ message: "Cycle not found." });
+
+    await Promise.all([
+      Income.deleteMany({ cycleId: cycle._id }),
+      Expense.deleteMany({ cycleId: cycle._id }),
+      Transfer.deleteMany({ cycleId: cycle._id }),
+    ]);
+    await Cycle.deleteOne({ _id: cycle._id });
+
+    res.status(200).json({ message: "Cycle deleted." });
+  } catch (error) {
+    console.error("deleteCycle failed:", error.message);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
 // GET /cycles/compare?ids=a,b,c — summaries for the requested cycles.
 exports.compareCycles = async (req, res) => {
   const email = req.user.email;

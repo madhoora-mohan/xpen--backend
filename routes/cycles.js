@@ -9,6 +9,7 @@ const {
   getCycleTransactions,
   exportCycles,
   compareCycles,
+  deleteCycle,
 } = require("../controllers/cycle");
 
 // Order matters: static segments before the :id param route
@@ -19,6 +20,7 @@ router.get("/compare", auth, compareCycles);
 router.get("/export", auth, exportCycles);
 router.get("/:id/summary", auth, getCycleSummary);
 router.get("/:id/transactions", auth, getCycleTransactions);
+router.delete("/:id", auth, deleteCycle);
 router.get("/", auth, listCycles);
 
 module.exports = router;
