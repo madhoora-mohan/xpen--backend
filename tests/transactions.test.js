@@ -12,6 +12,11 @@ const makeUser = (email = "test@example.com") => ({
 const getAuthAgent = async (email = "test@example.com") => {
   const agent = request.agent(app);
   await agent.post("/api/users").send(makeUser(email));
+  // Every user needs an active cycle before they can log transactions.
+  await agent.post("/api/v1/cycles/open").send({
+    startDate: new Date().toISOString(),
+    label: "Test Cycle",
+  });
   return agent;
 };
 

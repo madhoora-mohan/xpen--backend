@@ -1,5 +1,6 @@
 const IncomeSchema = require("../models/IncomeModel");
 const { emit } = require("../middleware/sseManager");
+const { getActiveCycleId } = require("../utils/cycleHelper");
 
 exports.addIncome = async (req, res) => {
   const email = req.user.email;
@@ -10,20 +11,15 @@ exports.addIncome = async (req, res) => {
     return res.status(400).json({ message: "All fields are required!" });
   }
   if (isNaN(amount) || amount <= 0) {
-    return res
-      .status(400)
-      .json({ message: "Amount must be a positive number!" });
+    return res.status(400).json({ message: "Amount must be a positive number!" });
   }
 
   try {
-    await new IncomeSchema({
-      email,
-      title,
-      amount,
-      category,
-      description,
-      date,
-    }).save();
+    const cycleId = await getActiveCycleId(email);
+    if (!cycleId) {
+      return res.status(409).json({ code: "NO_ACTIVE_CYCLE", message: "No active cycle. Create one first." });
+    }
+    await new IncomeSchema({ email, cycleId, title, amount, category, description, date }).save();
     emit(email, "income_changed", { action: "add" });
     res.status(200).json({ message: "Income Added" });
   } catch (error) {
@@ -35,7 +31,11 @@ exports.addIncome = async (req, res) => {
 exports.getIncomes = async (req, res) => {
   const email = req.user.email;
   try {
-    const incomes = await IncomeSchema.find({ email }).sort({ date: 1 });
+    const cycleId = await getActiveCycleId(email);
+    if (!cycleId) {
+      return res.status(409).json({ code: "NO_ACTIVE_CYCLE", message: "No active cycle. Create one first." });
+    }
+    const incomes = await IncomeSchema.find({ email, cycleId }).sort({ date: 1 });
     res.status(200).json(incomes);
   } catch (error) {
     console.error("getIncomes failed:", error.message);

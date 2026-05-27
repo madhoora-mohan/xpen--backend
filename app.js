@@ -8,6 +8,7 @@ const { db } = require("./db/db");
 const userRoutes = require("./routes/user");
 const authRoutes = require("./routes/auth");
 const transactionRoutes = require("./routes/transactions");
+const cycleRoutes = require("./routes/cycles");
 
 const app = express();
 
@@ -45,6 +46,7 @@ const authLimiter = rateLimit({
   max: 35,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: () => process.env.NODE_ENV === "test",
   message: { message: "Too many requests, please try again later." },
 });
 
@@ -52,6 +54,7 @@ const authLimiter = rateLimit({
 app.use("/api/users", authLimiter, userRoutes);
 app.use("/api/auth", authLimiter, authRoutes);
 app.use("/api/v1", transactionRoutes);
+app.use("/api/v1/cycles", cycleRoutes);
 
 const server = () => {
   db();

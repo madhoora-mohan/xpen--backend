@@ -2,6 +2,11 @@ const mongoose = require("mongoose");
 
 const ExpenseSchema = new mongoose.Schema(
   {
+    cycleId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Cycle",
+      index: true,
+    },
     email: {
       type: String,
       required: true,
