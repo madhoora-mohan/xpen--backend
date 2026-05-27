@@ -50,6 +50,8 @@ const authLimiter = rateLimit({
   message: { message: "Too many requests, please try again later." },
 });
 
+app.get("/ping", (_req, res) => res.sendStatus(200));
+
 //routes
 app.use("/api/users", authLimiter, userRoutes);
 app.use("/api/auth", authLimiter, authRoutes);
